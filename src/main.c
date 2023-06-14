@@ -20,6 +20,7 @@
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/sensor.h>
 
+#include "tof.h"
 
 #define SLEEP_TIME_MS   1000
 #define LED_B_NODE DT_ALIAS(led_blue)
@@ -41,21 +42,16 @@ void main(void)
 
 	//init ble, i2c, leds
 	init_ble();
-	error = i2c_configure(device_get_binding("i2c"),I2C_SPEED_SET(I2C_SPEED_FAST));
+	error = i2c_configure(device_get_binding("i2c"),I2C_SPEED_SET(I2C_SPEED_STANDARD));
 	k_sleep(K_MSEC(150));
 		
 	//init sensors
 	//init_bmp();
-	//init_bmi();
-	//init_shtc();
-	init_mlx();
-
-	while (true)
-	{
-		k_msleep(100);
-		readout_sensor();
-	}
-	
+	init_bmi();
+	init_shtc();
+	init_tof();
+	//init_mlx();
+	//init_BAS();
 
 	
 	// LED
@@ -63,8 +59,9 @@ void main(void)
 	gpio_pin_configure_dt(&ledB, GPIO_OUTPUT_INACTIVE);
 	gpio_pin_configure_dt(&ledR, GPIO_OUTPUT_INACTIVE);
 	gpio_pin_configure_dt(&ledG, GPIO_OUTPUT_INACTIVE);
+	
 
-
+	/*
 	while (1) {
 		//BLUE
 		error = gpio_pin_toggle_dt(&ledB);
@@ -82,5 +79,6 @@ void main(void)
 		k_msleep(SLEEP_TIME_MS);
 
 	}
+	*/
 	
 }

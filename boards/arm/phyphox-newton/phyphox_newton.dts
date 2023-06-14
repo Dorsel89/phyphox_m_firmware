@@ -63,7 +63,7 @@
 			label = "vl53 XShut";
 		};
 		button4: button_4 { // gpio19 P0.03
-			gpios = <&gpio0 3 (GPIO_ACTIVE_LOW)>;
+			gpios = <&gpio0 3 (GPIO_ACTIVE_HIGH)>;
 			label = "vl53 data ready";
 		};
 	};

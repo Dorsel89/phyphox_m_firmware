@@ -40,6 +40,9 @@ static ssize_t config_submits(struct bt_conn *conn, const struct bt_gatt_attr *a
 	if(attr->uuid == &shtc_cnfg.uuid){
 		submit_config_shtc();
 	}
+	if(attr->uuid == &tof_cnfg.uuid){
+		update_config_tof();
+	}
 	return len;
 };
 
@@ -64,7 +67,20 @@ BT_GATT_SERVICE_DEFINE(phyphox_gatt,
 			       BT_GATT_PERM_WRITE,
 			       NULL, config_submits, &shtc_data.config[0]),
 	BT_GATT_CCC(ccc_cfg_changed,	//notification handler
-		    BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),			
+		    BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),
+//TOF
+	BT_GATT_CHARACTERISTIC(&tof_uuid,					
+			       BT_GATT_CHRC_READ | BT_GATT_CHRC_NOTIFY,
+			       BT_GATT_PERM_READ,
+			       read_u16, NULL, &tof_data.data_array[0]),
+	BT_GATT_CCC(ccc_cfg_changed,
+		    BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),
+    BT_GATT_CHARACTERISTIC(&tof_cnfg,					
+			       BT_GATT_CHRC_WRITE | BT_GATT_CHRC_NOTIFY,
+			       BT_GATT_PERM_WRITE,
+			       NULL, config_submits, &tof_data.config[0]),
+	BT_GATT_CCC(ccc_cfg_changed,	//notification handler
+		    BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),								
 //BMI323 - GYROSCOPE
 	BT_GATT_CHARACTERISTIC(&bmi_gyr_uuid,					
 			       BT_GATT_CHRC_READ | BT_GATT_CHRC_NOTIFY,
@@ -134,7 +150,7 @@ static void disconnected(struct bt_conn *conn, uint8_t reason)
 	printk("Disconnected (reason 0x%02x)\n\r", reason);
 	sleep_bmi(true);
 	sleep_shtc(true);
-
+	sleep_tof(true);
 	
 }
 static void le_param_updated(struct bt_conn *conn, uint16_t interval,
@@ -184,6 +200,10 @@ void init_ble(){
 	bt_conn_cb_register(&conn_callbacks);
 };
 
+extern void set_supercap_level(uint8_t val){
+	bt_bas_set_battery_level(val);
+}
+
 extern void send_data(uint8_t ID, float* DATA,uint8_t LEN){
 	if(ID == SENSOR_BMP581_ID){
 		bt_gatt_notify_uuid(NULL, &bmp_uuid.uuid,&phyphox_gatt.attrs[0],DATA,LEN);
@@ -202,4 +222,9 @@ extern void send_data(uint8_t ID, float* DATA,uint8_t LEN){
 		bt_gatt_notify_uuid(NULL, &shtc_uuid.uuid,&phyphox_gatt.attrs[0],DATA,LEN);
 		return;
 	}
+	if (ID == SENSOR_TOF_ID)
+	{
+		bt_gatt_notify_uuid(NULL, &tof_uuid.uuid,&phyphox_gatt.attrs[0],DATA,LEN);
+		return;
+	}	
 };

@@ -8,10 +8,11 @@
 #define DEBUG				true
 #define PRINT_SENSOR_DATA 	false
 
-#define SENSOR_BMP581_ID    1
+#define SENSOR_BMP581_ID		1
 #define SENSOR_BMI323_ACC_ID	2
 #define SENSOR_BMI323_GYR_ID	3
 #define SENSOR_SHTC_ID			4
+#define SENSOR_TOF_ID			5
 
 /**
  * @brief Helper function for converting struct sensor_value to float.
@@ -52,8 +53,16 @@ typedef struct {
 	uint8_t mode;
 }MLX;
 
+typedef struct {
+	int event_size;
+	int event_number;
+	uint16_t data_array[2*2];//distance, sigma distance
+	uint8_t config[20];
+}TOF;
+
 static BMP bmp_data;
 extern BMI bmi_data;
 static MLX mlx_data;
+static TOF tof_data;
 
 #endif // SENSORS_H
