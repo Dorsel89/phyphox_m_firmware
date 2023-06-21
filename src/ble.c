@@ -1,6 +1,9 @@
 #include "ble.h"
 
 BMI bmi_data;
+VEML veml_data;
+TOF tof_data;
+MLX mlx_data;
 
 static const struct bt_le_adv_param adv_param_normal = {
 	.options = BT_LE_ADV_OPT_CONNECTABLE | BT_LE_ADV_OPT_USE_NAME,
@@ -43,6 +46,9 @@ static ssize_t config_submits(struct bt_conn *conn, const struct bt_gatt_attr *a
 	if(attr->uuid == &tof_cnfg.uuid){
 		update_config_tof();
 	}
+	if(attr->uuid == &veml_cnfg.uuid){
+		update_config_veml();
+	}
 	return len;
 };
 
@@ -81,6 +87,19 @@ BT_GATT_SERVICE_DEFINE(phyphox_gatt,
 			       NULL, config_submits, &tof_data.config[0]),
 	BT_GATT_CCC(ccc_cfg_changed,	//notification handler
 		    BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),								
+//VEML
+	BT_GATT_CHARACTERISTIC(&veml_uuid,					
+			       BT_GATT_CHRC_READ | BT_GATT_CHRC_NOTIFY,
+			       BT_GATT_PERM_READ,
+			       read_u16, NULL, &veml_data.data_array[0]),
+	BT_GATT_CCC(ccc_cfg_changed,
+		    BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),
+    BT_GATT_CHARACTERISTIC(&veml_cnfg,					
+			       BT_GATT_CHRC_WRITE | BT_GATT_CHRC_NOTIFY,
+			       BT_GATT_PERM_WRITE,
+			       NULL, config_submits, &veml_data.config[0]),
+	BT_GATT_CCC(ccc_cfg_changed,	//notification handler
+		    BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),			
 //BMI323 - GYROSCOPE
 	BT_GATT_CHARACTERISTIC(&bmi_gyr_uuid,					
 			       BT_GATT_CHRC_READ | BT_GATT_CHRC_NOTIFY,
@@ -151,6 +170,7 @@ static void disconnected(struct bt_conn *conn, uint8_t reason)
 	sleep_bmi(true);
 	sleep_shtc(true);
 	sleep_tof(true);
+	sleep_veml(true);
 	
 }
 static void le_param_updated(struct bt_conn *conn, uint16_t interval,
@@ -225,6 +245,11 @@ extern void send_data(uint8_t ID, float* DATA,uint8_t LEN){
 	if (ID == SENSOR_TOF_ID)
 	{
 		bt_gatt_notify_uuid(NULL, &tof_uuid.uuid,&phyphox_gatt.attrs[0],DATA,LEN);
+		return;
+	}
+	if (ID == SENSOR_VEML_ID)
+	{
+		bt_gatt_notify_uuid(NULL, &veml_uuid.uuid,&phyphox_gatt.attrs[0],DATA,LEN);
 		return;
 	}	
 };

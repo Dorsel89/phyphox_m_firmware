@@ -22,8 +22,9 @@
 // #define ADC_NODE		     DT_PHANDLE(DT_PATH(zephyr_user), io_channels)
 // #define ADC_NUM_CHANNELS	 DT_PROP_LEN(DT_PATH(zephyr_user), io_channels)
 
+//#define NODE DT_INST(0, nordic_nrf_saadc)
 
-#define ADC_DEVICE_NAME DT_LABEL(DT_INST(0, nordic_nrf_saadc))
+#define ADC_DEVICE_NAME DT_PROP(DT_INST(0, nordic_nrf_saadc))
 
 
 static struct k_timer timer_bas;

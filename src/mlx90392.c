@@ -49,12 +49,12 @@ uint8_t set_mode(){
 
 static uint8_t read_bytes( uint8_t reg_address, uint8_t bytes, uint8_t* dest){
     uint8_t ret;
-    ret = i2c_burst_read(icm_dev,mlx_i2c_address,reg_address,dest,bytes);
+    ret = i2c_burst_read(mlx_dev,mlx_i2c_address,reg_address,dest,bytes);
 }
 static uint8_t write_byte(uint8_t reg_address, uint8_t data){
     uint8_t ret;
     uint8_t dataBuffer[2];
     dataBuffer[0]=reg_address;
     dataBuffer[1]=data;
-    return i2c_write(icm_dev, &dataBuffer, 2, mlx_i2c_address);
+    return i2c_write(mlx_dev, &dataBuffer, 2, mlx_i2c_address);
 }

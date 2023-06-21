@@ -75,7 +75,7 @@ static const uint8_t VL53L4CD_DEFAULT_CONFIGURATION[] = {
 	#endif
 	0x01, /* 0x2e : bit 0 if I2C pulled up at 1.8V, else set bit 0 to 1 (pull up at AVDD) */
 	0x01, /* 0x2f : bit 0 if GPIO pulled up at 1.8V, else set bit 0 to 1(pull up at AVDD) */
-	0x01, /* 0x30 : set bit 4 to 0 for active high interrupt and 1 for active low (bits 3:0 must be 0x1), use SetInterruptPolarity() */
+	0x11, /* 0x30 : set bit 4 to 0 for active high interrupt and 1 for active low (bits 3:0 must be 0x1), use SetInterruptPolarity() */
 	0x02, /* 0x31 : bit 1 = interrupt depending on the polarity,use CheckForDataReady() */
 	0x00, /* 0x32 : not user-modifiable */
 	0x02, /* 0x33 : not user-modifiable */

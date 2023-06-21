@@ -45,11 +45,16 @@ static const struct adc_channel_cfg m_1st_channel_cfg = {
 extern void init_BAS(){
 	
 	int err = 0;
-
+	adc_dev = DEVICE_DT_GET(DT_NODELABEL(adc));
+	if(adc_dev == NULL){
+		printf("issue..\n");
+	}
+	
 	err = adc_channel_setup(adc_dev, &m_1st_channel_cfg);
     if (err) {
 	    printk("Error in adc setup: %d\n", err);
 	}
+	
 	//init periodic updates
     
 	k_work_init(&work_bas, update_supercap_level);
@@ -59,7 +64,7 @@ extern void init_BAS(){
 };
 
 void update_supercap_level(){
-	//set_supercap_level(battery_level(getVoltage()));
+	set_supercap_level(battery_level(getVoltage()));
 };
 
 void time_to_update_battery_service(){
@@ -72,9 +77,9 @@ uint8_t battery_level(float adc_voltage){
 	//boost-buck converter works between 0.6V to 5V
 	//energy: 0.5*5F*voltage^2
 	float max_energy = 0.5*5*(pow(3,2)-pow(0.6,2));
-	float current_energy = 0.5*5*pow(cap_voltage,2);
+	float current_energy = 0.5*5*(pow(cap_voltage,2)-pow(0.6,2));
 	bat = (uint8_t)current_energy*100/max_energy;
-	printk("adc: %f cap: %f maxE: %f currentE: %f bat: %i\n",adc_voltage,cap_voltage,max_energy,current_energy, bat);
+	printf("adc: %f cap: %f maxE: %f currentE: %f bat: %i\n",adc_voltage,cap_voltage,max_energy,current_energy, bat);
 	return bat;
 };
 

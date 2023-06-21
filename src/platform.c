@@ -183,6 +183,7 @@ uint8_t WaitMs(Dev_t dev, uint32_t TimeMs)
 {
 	uint8_t status = 255;
 	/* To be filled by customer */
-	K_MSEC(TimeMs);
-	return status;
+	
+	
+	return k_sleep(K_MSEC(TimeMs));
 }

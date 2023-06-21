@@ -12,6 +12,7 @@
 #include "ble.h"
 #include "bmpZephyr.h"
 #include "bmiZephyr.h"
+#include "veml6030.h"
 
 #include <zephyr/mgmt/mcumgr/smp_bt.h>
 #include "os_mgmt/os_mgmt.h"
@@ -50,8 +51,9 @@ void main(void)
 	init_bmi();
 	init_shtc();
 	init_tof();
-	//init_mlx();
-	//init_BAS();
+	init_veml();
+	init_mlx();
+	init_BAS();
 
 	
 	// LED

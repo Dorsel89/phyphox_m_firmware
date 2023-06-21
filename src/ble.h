@@ -16,7 +16,8 @@
 
 #include "bmiZephyr.h"
 #include "shtc3.h"
-#include "tof.h"
+//#include "tof.h"
+
 #include "bas.h"
 
 static uint8_t phyphox_data[20] = {0};
@@ -48,6 +49,10 @@ static struct bt_uuid_128 shtc_cnfg = BT_UUID_INIT_128(BT_UUID_128_ENCODE(0xcddf
 //TOF
 static struct bt_uuid_128 tof_uuid = BT_UUID_INIT_128(BT_UUID_128_ENCODE(0xcddf1013, 0x30f7, 0x4671, 0x8b43, 0x5e40ba53514a)); 
 static struct bt_uuid_128 tof_cnfg = BT_UUID_INIT_128(BT_UUID_128_ENCODE(0xcddf1014, 0x30f7, 0x4671, 0x8b43, 0x5e40ba53514a));
+
+//VEML
+static struct bt_uuid_128 veml_uuid = BT_UUID_INIT_128(BT_UUID_128_ENCODE(0xcddf1015, 0x30f7, 0x4671, 0x8b43, 0x5e40ba53514a)); 
+static struct bt_uuid_128 veml_cnfg = BT_UUID_INIT_128(BT_UUID_128_ENCODE(0xcddf1016, 0x30f7, 0x4671, 0x8b43, 0x5e40ba53514a));
 
 static struct bt_uuid_128 hardware_uuid = BT_UUID_INIT_128(BT_UUID_128_ENCODE(0xcddf1021, 0x30f7, 0x4671, 0x8b43, 0x5e40ba53514a)); 
 static struct bt_uuid_128 hardware_cnfg = BT_UUID_INIT_128(BT_UUID_128_ENCODE(0xcddf1022, 0x30f7, 0x4671, 0x8b43, 0x5e40ba53514a));

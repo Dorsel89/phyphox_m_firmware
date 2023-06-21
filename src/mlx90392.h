@@ -8,7 +8,6 @@
 #include <zephyr/drivers/i2c.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/sensor.h>
-#include "ble.h"
 
 #define MLX_POWER_DOWN 0
 #define CONTINUOUS_10 2
@@ -26,8 +25,8 @@
 
 #define mlx_i2c_address 0x0C
 
-#define ICM_NODE DT_ALIAS(i2c)
-const static struct device *icm_dev = DEVICE_DT_GET(ICM_NODE);
+#define MLX_NODE DT_ALIAS(i2c)
+const static struct device *mlx_dev = DEVICE_DT_GET(MLX_NODE);
 
 
 static uint8_t read_bytes( uint8_t reg_address, uint8_t bytes, uint8_t* dest);
@@ -38,6 +37,6 @@ uint8_t set_mode();
     
 extern uint8_t init_mlx();
 extern uint8_t sleep_mlx(bool SLEEP);
-extern void submit_config_icm();
+extern void submit_config_mlx();
 
 #endif
