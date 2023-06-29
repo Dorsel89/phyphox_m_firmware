@@ -49,6 +49,9 @@ static ssize_t config_submits(struct bt_conn *conn, const struct bt_gatt_attr *a
 	if(attr->uuid == &veml_cnfg.uuid){
 		update_config_veml();
 	}
+	if(attr->uuid == &mlx_cnfg.uuid){
+		update_config_mlx();
+	}	
 	return len;
 };
 
@@ -99,7 +102,20 @@ BT_GATT_SERVICE_DEFINE(phyphox_gatt,
 			       BT_GATT_PERM_WRITE,
 			       NULL, config_submits, &veml_data.config[0]),
 	BT_GATT_CCC(ccc_cfg_changed,	//notification handler
-		    BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),			
+		    BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),
+//MLX
+	BT_GATT_CHARACTERISTIC(&mlx_uuid,					
+			       BT_GATT_CHRC_READ | BT_GATT_CHRC_NOTIFY,
+			       BT_GATT_PERM_READ,
+			       read_u16, NULL, &mlx_data.data_array[0]),
+	BT_GATT_CCC(ccc_cfg_changed,
+		    BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),
+    BT_GATT_CHARACTERISTIC(&mlx_cnfg,					
+			       BT_GATT_CHRC_WRITE | BT_GATT_CHRC_NOTIFY,
+			       BT_GATT_PERM_WRITE,
+			       NULL, config_submits, &mlx_data.config[0]),
+	BT_GATT_CCC(ccc_cfg_changed,	//notification handler
+		    BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),						
 //BMI323 - GYROSCOPE
 	BT_GATT_CHARACTERISTIC(&bmi_gyr_uuid,					
 			       BT_GATT_CHRC_READ | BT_GATT_CHRC_NOTIFY,
@@ -171,6 +187,7 @@ static void disconnected(struct bt_conn *conn, uint8_t reason)
 	sleep_shtc(true);
 	sleep_tof(true);
 	sleep_veml(true);
+	sleep_mlx(true);
 	
 }
 static void le_param_updated(struct bt_conn *conn, uint16_t interval,
@@ -251,5 +268,10 @@ extern void send_data(uint8_t ID, float* DATA,uint8_t LEN){
 	{
 		bt_gatt_notify_uuid(NULL, &veml_uuid.uuid,&phyphox_gatt.attrs[0],DATA,LEN);
 		return;
-	}	
+	}
+	if (ID == SENSOR_MLX_ID)
+	{
+		bt_gatt_notify_uuid(NULL, &mlx_uuid.uuid,&phyphox_gatt.attrs[0],DATA,LEN);
+		return;
+	}			
 };

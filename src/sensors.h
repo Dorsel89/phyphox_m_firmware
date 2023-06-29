@@ -14,6 +14,8 @@
 #define SENSOR_SHTC_ID			4
 #define SENSOR_TOF_ID			5
 #define SENSOR_VEML_ID			6
+#define SENSOR_MLX_ID			7
+
 
 /**
  * @brief Helper function for converting struct sensor_value to float.

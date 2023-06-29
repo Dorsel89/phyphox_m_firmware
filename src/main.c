@@ -43,7 +43,7 @@ void main(void)
 
 	//init ble, i2c, leds
 	init_ble();
-	error = i2c_configure(device_get_binding("i2c"),I2C_SPEED_SET(I2C_SPEED_STANDARD));
+	error = i2c_configure(device_get_binding("i2c"),I2C_SPEED_SET(I2C_SPEED_FAST));
 	k_sleep(K_MSEC(150));
 		
 	//init sensors

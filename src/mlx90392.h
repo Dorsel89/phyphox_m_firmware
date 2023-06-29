@@ -22,6 +22,8 @@
 #define MLX_MODE_REG 0x10
 #define MLX_STATUS_REG 0x00
 #define MLX_DATA_REG 0x01
+#define MLX_CONFIG1_REG 0x14
+#define MLX_CONFIG2_REG 0x15
 
 #define mlx_i2c_address 0x0C
 
@@ -32,11 +34,17 @@ const static struct device *mlx_dev = DEVICE_DT_GET(MLX_NODE);
 static uint8_t read_bytes( uint8_t reg_address, uint8_t bytes, uint8_t* dest);
 static uint8_t write_byte(uint8_t reg_address, uint8_t data);
 
+static struct k_timer timer_mlx;
+static struct k_work work_mlx;
+static struct k_work config_work_mlx;
+
 extern uint8_t readout_sensor();
 uint8_t set_mode();
     
 extern uint8_t init_mlx();
 extern uint8_t sleep_mlx(bool SLEEP);
-extern void submit_config_mlx();
+//extern void submit_config_mlx();
+extern void update_config_mlx();
+static void mlxDataReady();
 
 #endif
