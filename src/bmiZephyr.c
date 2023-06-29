@@ -204,7 +204,7 @@ int8_t configure_int(){
 		       bmiResult, bmiInt.port->name, bmiInt.pin);
 		return bmiResult;
 	}
-    bmiResult = gpio_pin_interrupt_configure_dt(&bmiInt,GPIO_INT_EDGE_RISING);
+    bmiResult = gpio_pin_interrupt_configure_dt(&bmiInt,GPIO_INT_EDGE_FALLING);
 	if (bmiResult != 0) {
 		printk("Error %d: failed to configure interrupt on %s pin %d\n\r",
 			bmiResult, bmiInt.port->name, bmiInt.pin);
@@ -269,9 +269,9 @@ int8_t init_bmi(){
     bmiResult = bmi323_get_int_pin_config(&int_cfg, &bmi3_dev);
     int_cfg.pin_type = BMI3_INT1;
     int_cfg.pin_cfg[0].output_en = BMI3_INT_OUTPUT_ENABLE;
-    int_cfg.pin_cfg[0].lvl = BMI3_INT_ACTIVE_HIGH;
+    int_cfg.pin_cfg[0].lvl = BMI3_INT_ACTIVE_LOW;
 
-    int_cfg.pin_cfg[0].od = BMI3_INT_PUSH_PULL;
+    int_cfg.pin_cfg[0].od = BMI3_INT_OPEN_DRAIN;
     bmiResult = bmi323_set_int_pin_config(&int_cfg, &bmi3_dev);
 
     bmiResult = apply_bmi_config(&bmi3_dev,BMI3_ACC_ODR_50HZ,BMI3_ACC_RANGE_16G,BMI3_GYR_RANGE_2000DPS,BMI3_GYR_AVG1,BMI3_GYR_MODE_SUSPEND); //mh this should be reworked

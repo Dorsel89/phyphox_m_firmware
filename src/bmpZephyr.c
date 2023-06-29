@@ -88,7 +88,7 @@ static int8_t set_config(struct bmp5_osr_odr_press_config *osr_odr_press_cfg, st
 
     rslt = bmp5_set_power_mode(BMP5_POWERMODE_STANDBY, dev);
     bmp5_error_codes_print_result("bmp5_set_power_mode1", rslt);
-
+    /**/
     if (rslt == BMP5_OK)
     {
         /* Get default odr */
@@ -137,8 +137,10 @@ static int8_t set_config(struct bmp5_osr_odr_press_config *osr_odr_press_cfg, st
         }
 
         /* Set powermode as normal */
-        rslt = bmp5_set_power_mode(BMP5_POWERMODE_NORMAL, dev);
+       // rslt = bmp5_set_power_mode(BMP5_POWERMODE_NORMAL, dev);
         bmp5_error_codes_print_result("bmp5_set_power_mode", rslt);
+
+        rslt = bmp5_set_power_mode(BMP5_POWERMODE_STANDBY, dev);
     }
 
     return rslt;

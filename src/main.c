@@ -35,26 +35,26 @@ static const struct gpio_dt_spec ledR = GPIO_DT_SPEC_GET(LED_R_NODE, gpios);
 void main(void)
 {
 	uint8_t error;
-
+	
 	//init over-the-air updates
 	os_mgmt_register_group();
 	img_mgmt_register_group();
 	smp_bt_register();
 
 	//init ble, i2c, leds
+	
 	init_ble();
 	error = i2c_configure(device_get_binding("i2c"),I2C_SPEED_SET(I2C_SPEED_FAST));
 	k_sleep(K_MSEC(150));
 		
 	//init sensors
-	//init_bmp();
+	init_bmp();
 	init_bmi();
 	init_shtc();
-	init_tof();
-	init_veml();
+	//init_tof();
+	//init_veml();
 	init_mlx();
 	init_BAS();
-
 	
 	// LED
 
