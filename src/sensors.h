@@ -70,7 +70,7 @@ typedef struct {
 	uint8_t integration_time;
 }VEML;
 
-static BMP bmp_data;
+extern BMP bmp_data;
 extern BMI bmi_data;
 extern MLX mlx_data;
 extern TOF tof_data;

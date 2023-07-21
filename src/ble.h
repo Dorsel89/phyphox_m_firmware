@@ -16,6 +16,7 @@
 
 #include "bmiZephyr.h"
 #include "shtc3.h"
+#include "bmpZephyr.h"
 //#include "tof.h"
 
 #include "bas.h"

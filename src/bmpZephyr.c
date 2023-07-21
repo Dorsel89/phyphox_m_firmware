@@ -75,11 +75,6 @@ static void bmpDataReady(const struct device *dev, struct gpio_callback *cb,uint
 	k_work_submit(&work_bmp);
 }
 
-void submit_config_bmp(){
-
-}
-
-
 static int8_t set_config(struct bmp5_osr_odr_press_config *osr_odr_press_cfg, struct bmp5_dev *dev)
 {
     int8_t rslt;
@@ -138,7 +133,7 @@ static int8_t set_config(struct bmp5_osr_odr_press_config *osr_odr_press_cfg, st
 
         /* Set powermode as normal */
        // rslt = bmp5_set_power_mode(BMP5_POWERMODE_NORMAL, dev);
-        bmp5_error_codes_print_result("bmp5_set_power_mode", rslt);
+        //bmp5_error_codes_print_result("bmp5_set_power_mode", rslt);
 
         rslt = bmp5_set_power_mode(BMP5_POWERMODE_STANDBY, dev);
     }
@@ -250,6 +245,30 @@ extern int8_t init_bmp(){
 	gpio_init_callback(&bmpInt_cb_data, bmpDataReady, BIT(bmpInt.pin));
 	gpio_add_callback(bmpInt.port, &bmpInt_cb_data);
     return rslt;
+}
+
+extern uint8_t sleep_bmp(bool SLEEP){
+    if(SLEEP){
+            uint8_t rslt = bmp5_set_power_mode(BMP5_POWERMODE_STANDBY, &bmp581_dev);
+    }else{
+        //TODO
+    }    
+}
+
+void submit_config_bmp(){
+    if(DEBUG){
+        printf("BMP: setting config to\n");
+        printf("enable: %d \n",bmp_data.config[0]);
+    }
+
+    set_config(&osr_odr_press_cfg, &bmp581_dev);
+
+    if(bmp_data.config[0]){
+        bmp5_set_power_mode(BMP5_POWERMODE_NORMAL, &bmp581_dev);
+    }else{
+        sleep_bmp(true);
+    }
+    
 }
 
 

@@ -4,6 +4,7 @@ BMI bmi_data;
 VEML veml_data;
 TOF tof_data;
 MLX mlx_data;
+BMP bmp_data;
 
 static const struct bt_le_adv_param adv_param_normal = {
 	.options = BT_LE_ADV_OPT_CONNECTABLE | BT_LE_ADV_OPT_USE_NAME,
@@ -32,11 +33,11 @@ static ssize_t config_submits(struct bt_conn *conn, const struct bt_gatt_attr *a
 		return BT_GATT_ERR(BT_ATT_ERR_INVALID_OFFSET);
 	}
 	memcpy(value + offset, buf, len);
-	/*
+	
 	if(attr->uuid == &bmp_cnfg.uuid){
 		submit_config_bmp();
 	}
-	*/
+	
 	if(attr->uuid == &bmi_cnfg.uuid){
 		submit_config_bmi();
 	}
@@ -63,6 +64,12 @@ BT_GATT_SERVICE_DEFINE(phyphox_gatt,
 			       BT_GATT_PERM_READ,
 			       read_u16, NULL, &bmp_data.array[0]),
 	BT_GATT_CCC(ccc_cfg_changed,
+		    BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),
+ 	BT_GATT_CHARACTERISTIC(&bmp_cnfg,					
+			       BT_GATT_CHRC_WRITE | BT_GATT_CHRC_NOTIFY,
+			       BT_GATT_PERM_WRITE,
+			       NULL, config_submits, &bmp_data.config[0]),
+	BT_GATT_CCC(ccc_cfg_changed,	//notification handler
 		    BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),
 //SHTC
 	BT_GATT_CHARACTERISTIC(&shtc_uuid,					
@@ -188,6 +195,7 @@ static void disconnected(struct bt_conn *conn, uint8_t reason)
 	sleep_tof(true);
 	sleep_veml(true);
 	sleep_mlx(true);
+	sleep_bmp(true);
 	
 }
 static void le_param_updated(struct bt_conn *conn, uint16_t interval,
