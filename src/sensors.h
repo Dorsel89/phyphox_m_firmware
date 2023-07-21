@@ -48,12 +48,14 @@ typedef struct {
 }BMI;
 
 typedef struct {
-	int event_size;
-	int event_number;
-	int nOutputs;
-	int16_t data_array[3*30];//x,y,z,t
+	int samplesPerPackage;
+	int measureSamples;
+	float x;
+	float y;
+	float z;
+	float timestamp;
+    float array[4*10];//store up to 10 datapoints before transmission
 	uint8_t config[20];
-	uint8_t mode;
 }MLX;
 
 typedef struct {

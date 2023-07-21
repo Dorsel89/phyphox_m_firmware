@@ -53,7 +53,7 @@ void main(void)
 	init_shtc();
 	init_tof();
 	init_veml();
-	//init_mlx();
+	init_mlx();
 	init_BAS();
 	
 	// LED
