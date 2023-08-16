@@ -334,6 +334,15 @@ int8_t bmi323_get_sensor_data(struct bmi3_sensor_data *sensor_data, uint8_t n_se
     return rslt;
 }
 
+int8_t bmi323_get_acc_gyr_fast(struct bmi3_sensor_data *sensor_data, uint8_t n_sens, struct bmi3_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    rslt = bmi3_get_acc_gyr_fast(sensor_data, n_sens, dev);
+
+    return rslt;
+}
 /*!
  *  @brief This API reads the error status from the sensor.
  */

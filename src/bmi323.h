@@ -631,6 +631,9 @@ int8_t bmi323_get_sensor_config(struct bmi3_sens_config *sens_cfg, uint8_t n_sen
  */
 int8_t bmi323_get_sensor_data(struct bmi3_sensor_data *sensor_data, uint8_t n_sens, struct bmi3_dev *dev);
 
+int8_t bmi323_get_acc_gyr_fast(struct bmi3_sensor_data *sensor_data, uint8_t n_sens, struct bmi3_dev *dev);
+
+
 /*!
  * \ingroup bmi323ApiInt
  * \page bmi323_api_bmi323_map_interrupt bmi323_map_interrupt

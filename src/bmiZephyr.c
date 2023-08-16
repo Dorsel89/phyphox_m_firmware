@@ -8,8 +8,9 @@ static void bmiDataReady(const struct device *dev, struct gpio_callback *cb,uint
 int count = 0;
 static BMI3_INTF_RET_TYPE app_i2c_read(uint8_t reg_addr, uint8_t *read_data, uint32_t len, void *intf_ptr) {
 	uint8_t ret;
-	ret = i2c_write(intf_ptr, &reg_addr, 1, BMI384_I2C_ADDR);
-	ret = i2c_read(intf_ptr, read_data, len, BMI384_I2C_ADDR);
+	//ret = i2c_write(intf_ptr, &reg_addr, 1, BMI384_I2C_ADDR);
+	//ret = i2c_read(intf_ptr, read_data, len, BMI384_I2C_ADDR);
+    ret = i2c_write_read(intf_ptr,BMI384_I2C_ADDR,&reg_addr,1,read_data,len);
 	return ret;
 }
 
@@ -38,30 +39,37 @@ extern void send_data_bmi(void){
     bmiResult = bmi323_get_int1_status(&int_status, &bmi3_dev);
     if (int_status & BMI3_INT_STATUS_GYR_DRDY){
 
-        bmiResult = bmi323_get_sensor_data(sensor_data, 2, &bmi3_dev);
+        //bmiResult = bmi323_get_sensor_data(sensor_data, 2, &bmi3_dev);
+        bmiResult = bmi323_get_acc_gyr_fast(sensor_data, 2, &bmi3_dev);
         int currentSample = 0;
 
         if(BMI_X & *bmi_axis){
-            bmi_data.gyr_array[bmi_data.event_number*bmi_data.nOutputs+currentSample]=sensor_data[0].sens_data.gyr.x;
-            bmi_data.acc_array[bmi_data.event_number*bmi_data.nOutputs+currentSample]=sensor_data[1].sens_data.acc.x;
+            bmi_data.gyr_array[bmi_data.event_number*bmi_data.nOutputs+currentSample+2]=sensor_data[0].sens_data.gyr.x;
+            bmi_data.acc_array[bmi_data.event_number*bmi_data.nOutputs+currentSample+2]=sensor_data[1].sens_data.acc.x;
             currentSample+=1;
             }
         if(BMI_Y & *bmi_axis){
-            bmi_data.gyr_array[bmi_data.event_number*bmi_data.nOutputs+currentSample]=sensor_data[0].sens_data.gyr.y;
-            bmi_data.acc_array[bmi_data.event_number*bmi_data.nOutputs+currentSample]=sensor_data[1].sens_data.acc.y;
+            bmi_data.gyr_array[bmi_data.event_number*bmi_data.nOutputs+currentSample+2]=sensor_data[0].sens_data.gyr.y;
+            bmi_data.acc_array[bmi_data.event_number*bmi_data.nOutputs+currentSample+2]=sensor_data[1].sens_data.acc.y;
             currentSample+=1;
             }
         if(BMI_Z & *bmi_axis){
-            bmi_data.gyr_array[bmi_data.event_number*bmi_data.nOutputs+currentSample]=sensor_data[0].sens_data.gyr.z;
-            bmi_data.acc_array[bmi_data.event_number*bmi_data.nOutputs+currentSample]=sensor_data[1].sens_data.acc.z;
+            bmi_data.gyr_array[bmi_data.event_number*bmi_data.nOutputs+currentSample+2]=sensor_data[0].sens_data.gyr.z;
+            bmi_data.acc_array[bmi_data.event_number*bmi_data.nOutputs+currentSample+2]=sensor_data[1].sens_data.acc.z;
             currentSample+=1;
             }         
 
         bmi_data.event_number++;
         if(bmi_data.event_number == bmi_data.event_size){
-            send_data(SENSOR_BMI323_GYR_ID, &bmi_data.gyr_array, bmi_data.event_size*bmi_data.nOutputs*2);           
-            send_data(SENSOR_BMI323_ACC_ID, &bmi_data.acc_array, bmi_data.event_size*bmi_data.nOutputs*2);           
+            int16_t buffer[2];
+            uint32_t pck_number = bmi_data.package_number;
+            memcpy(&buffer[0],&pck_number,4);
+            bmi_data.gyr_array[0] = buffer[0];
+            bmi_data.gyr_array[1] = buffer[1];         
+            send_data(SENSOR_BMI323_GYR_ID, &bmi_data.gyr_array, bmi_data.event_size*bmi_data.nOutputs*2+4);           
+            send_data(SENSOR_BMI323_ACC_ID, &bmi_data.acc_array, bmi_data.event_size*bmi_data.nOutputs*2+4);           
             bmi_data.event_number=0;
+            bmi_data.package_number +=1;
         }
         
     }
@@ -163,6 +171,8 @@ void submit_config_bmi(){
    if(DEBUG){printk("5 enable axis: %i\n\r",*bmi_axis);};
    if(DEBUG){printk("6 n-times repeating %i\n\r",*bmi_event_size);};
 
+    bmi_data.package_number = 0;
+
     if(*bmi_axis == 0){
         *bmi_axis = 0x07; 
     }
@@ -191,6 +201,7 @@ uint8_t sleep_bmi(bool SLEEP){
         apply_bmi_config(&bmi3_dev,*bmi_rate,*bmi_range_acc ,*bmi_range_gyr,*bmi_average,BMI3_GYR_MODE_HIGH_PERF);
     }else{
         apply_bmi_config(&bmi3_dev,BMI3_GYR_ODR_100HZ,BMI3_ACC_RANGE_16G,BMI3_GYR_RANGE_2000DPS,BMI3_GYR_AVG1,BMI3_GYR_MODE_SUSPEND);//sleep
+        bmi_data.package_number = 0;
    }
 }
 
@@ -228,6 +239,7 @@ int8_t init_bmi(){
 	bmiResult = bmi3_init(&bmi3_dev);
     bmi_data.event_size = 1;
     bmi_data.event_number = 0;
+    bmi_data.package_number = 0;
     
     bmi_en = &bmi_data.config[0];
     bmi_rate = &bmi_data.config[1];

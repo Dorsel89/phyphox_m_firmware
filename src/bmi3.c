@@ -218,6 +218,9 @@ static int8_t get_accel_config(struct bmi3_accel_config *config, struct bmi3_dev
  */
 static int8_t get_accel_sensor_data(struct bmi3_sens_axes_data *data, uint8_t reg_addr, struct bmi3_dev *dev);
 
+static int8_t get_accel_gyr_fast(struct bmi3_sens_axes_data *data,struct bmi3_sens_axes_data *data2, uint8_t reg_addr, struct bmi3_dev *dev);
+
+
 /*!
  * @brief This internal API sets gyroscope configurations like ODR, gyro mode,
  * bandwidth, averaging samples and range.
@@ -2568,6 +2571,31 @@ int8_t bmi3_get_sensor_data(struct bmi3_sensor_data *sensor_data, uint8_t n_sens
                 break;
             }
         }
+    }
+    else
+    {
+        rslt = BMI3_E_NULL_PTR;
+    }
+
+    return rslt;
+}
+
+int8_t bmi3_get_acc_gyr_fast(struct bmi3_sensor_data *sensor_data, uint8_t n_sens, struct bmi3_dev *dev)
+{
+    /* Variable to store result of API */
+    int8_t rslt;
+
+    /* Variable to define loop */
+    uint8_t loop;
+
+    /* Null-pointer check */
+    rslt = null_ptr_check(dev);
+
+    if ((rslt == BMI3_OK) && (sensor_data != NULL))
+    {
+
+        rslt = get_accel_gyr_fast(&sensor_data[1].sens_data.acc, &sensor_data[0].sens_data.gyr, BMI3_REG_ACC_DATA_X, dev);
+
     }
     else
     {
@@ -4946,6 +4974,53 @@ static int8_t get_accel_sensor_data(struct bmi3_sens_axes_data *data, uint8_t re
 
             /* Get accelerometer data from the register */
             get_acc_data(data, acc_data);
+        }
+    }
+    else
+    {
+        rslt = BMI3_E_NULL_PTR;
+    }
+
+    return rslt;
+}
+
+
+static int8_t get_accel_gyr_fast(struct bmi3_sens_axes_data *data, struct bmi3_sens_axes_data *data2, uint8_t reg_addr, struct bmi3_dev *dev)
+{
+    /* Variable to store result of API */
+    int8_t rslt;
+
+    /* Array to define data stored in register */
+    uint8_t reg_data[BMI3_ACC_NUM_BYTES] = { 0 };
+
+    /* Stores the accel x, y and z axis data from register */
+    uint16_t acc_data[6];
+    uint16_t gyr_data[6];
+
+    if (data != NULL)
+    {
+        /* Read the sensor data */
+        rslt = bmi3_get_regs(reg_addr, reg_data, BMI3_ACC_NUM_BYTES, dev);
+
+        if (rslt == BMI3_OK)
+        {
+            acc_data[0] = (reg_data[0] | (uint16_t)reg_data[1] << 8);
+            acc_data[1] = (reg_data[2] | (uint16_t)reg_data[3] << 8);
+            acc_data[2] = (reg_data[4] | (uint16_t)reg_data[5] << 8);
+            acc_data[3] = (reg_data[14] | (uint16_t)reg_data[15] << 8);
+            acc_data[4] = (reg_data[16] | (uint16_t)reg_data[17] << 8);
+            acc_data[5] = reg_data[18];
+
+            gyr_data[0] = (reg_data[0+6] | (uint16_t)reg_data[1+6] << 8);
+            gyr_data[1] = (reg_data[2+6] | (uint16_t)reg_data[3+6] << 8);
+            gyr_data[2] = (reg_data[4+6] | (uint16_t)reg_data[5+6] << 8);
+            gyr_data[3] = (reg_data[8+6] | (uint16_t)reg_data[9+6] << 8);
+            gyr_data[4] = (reg_data[10+6] | (uint16_t)reg_data[11+6] << 8);
+            gyr_data[5] = reg_data[12+6];
+
+            /* Get accelerometer data from the register */
+            get_acc_data(data, acc_data);
+            get_gyr_data(data2, gyr_data);
         }
     }
     else

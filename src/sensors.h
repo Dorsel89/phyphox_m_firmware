@@ -42,9 +42,10 @@ typedef struct {
 	int event_size;
 	int event_number;
 	int nOutputs;
-	int16_t acc_array[3*30];//x,y,z,t
-	int16_t gyr_array[3*30];//x,y,z,t
+	int16_t acc_array[3*30+2];//x,y,z,t
+	int16_t gyr_array[3*30+2];//x,y,z,t
 	uint8_t config[20];
+	uint32_t package_number;
 }BMI;
 
 typedef struct {

@@ -23,6 +23,9 @@
 
 #include "tof.h"
 
+#include <nrfx_twi.h>
+
+
 #define SLEEP_TIME_MS   1000
 #define LED_B_NODE DT_ALIAS(led_blue)
 #define LED_G_NODE DT_ALIAS(led_green)
@@ -45,6 +48,10 @@ void main(void)
 	
 	init_ble();
 	error = i2c_configure(device_get_binding("i2c"),I2C_SPEED_SET(I2C_SPEED_FAST));
+
+	
+	#define NRF_TWI_FREQ_800 209715200
+
 	k_sleep(K_MSEC(150));
 		
 	//init sensors
