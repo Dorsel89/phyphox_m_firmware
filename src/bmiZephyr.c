@@ -5,20 +5,90 @@ static void bmiDataReady(const struct device *dev, struct gpio_callback *cb,uint
 {
 	k_work_submit(&work_bmi);
 }
+
+
+static struct k_poll_signal spi_done_sig = K_POLL_SIGNAL_INITIALIZER(spi_done_sig);
+
+struct spi_cs_control spim_cs = {
+	.gpio = SPI_CS_GPIOS_DT_SPEC_GET(DT_NODELABEL(reg_my_spi_master)),
+	.delay = 0,
+};
+static const struct spi_config spi_cfg = {
+	.operation = SPI_WORD_SET(8) | SPI_TRANSFER_MSB |
+				 SPI_MODE_CPOL | SPI_MODE_CPHA,
+	.frequency = 400000,
+	.slave = 0,
+	.cs = &spim_cs,
+};
+
 int count = 0;
-static BMI3_INTF_RET_TYPE app_i2c_read(uint8_t reg_addr, uint8_t *read_data, uint32_t len, void *intf_ptr) {
+static BMI3_INTF_RET_TYPE app_spi_read(uint8_t reg_addr, uint8_t *read_data, uint32_t len, void *intf_ptr) {
 	uint8_t ret;
-	//ret = i2c_write(intf_ptr, &reg_addr, 1, BMI384_I2C_ADDR);
-	//ret = i2c_read(intf_ptr, read_data, len, BMI384_I2C_ADDR);
-    ret = i2c_write_read(intf_ptr,BMI384_I2C_ADDR,&reg_addr,1,read_data,len);
+	//ret = i2c_write_read(intf_ptr,BMI384_I2C_ADDR,&reg_addr,1,read_data,len);
+    uint8_t address[2];
+	struct spi_buf transmit_buffer;
+	struct spi_buf_set transmit_buffer_set;
+	struct spi_buf receive_buffers[2];
+	struct spi_buf_set receive_buffers_set;
+
+	address[0] = reg_addr;
+	address[1] = 0x00;
+
+	transmit_buffer.buf = address;
+	transmit_buffer.len = sizeof(address);
+
+	transmit_buffer_set.buffers = &transmit_buffer;
+	transmit_buffer_set.count = 1;
+
+	receive_buffers[0].buf = NULL;
+	receive_buffers[0].len = 2;
+	receive_buffers[1].buf = read_data;
+	receive_buffers[1].len = len;
+
+	receive_buffers_set.buffers = receive_buffers;
+	receive_buffers_set.count = 2;
+
+	//ret = spi_transceive(spi_dev,&spi_cfg, &transmit_buffer_set, &receive_buffers_set);
+    ret = spi_transceive(intf_ptr,&spi_cfg, &transmit_buffer_set, &receive_buffers_set);
+    //ret = spi_read(intf_ptr,&spi_cfg,&receive_buffers_set);
+    printf("read: %i\r\n",ret);
+	k_usleep(2);
+
 	return ret;
 }
 
-static BMI3_INTF_RET_TYPE app_i2c_write(uint8_t reg_addr, const uint8_t *write_data, uint32_t len, void *intf_ptr) {
+static BMI3_INTF_RET_TYPE app_spi_write(uint8_t reg_addr, const uint8_t *write_data, uint32_t len, void *intf_ptr) {
+    /*
 	uint8_t dataBuffer[len+1];
 	dataBuffer[0]=reg_addr;
 	memcpy(&dataBuffer[0]+1,write_data,len);
 	return i2c_write(intf_ptr, &dataBuffer, len+1, BMI384_I2C_ADDR);
+    */
+    uint8_t address;
+	struct spi_buf transmit_buffers[2];
+	struct spi_buf_set transmit_buffer_set;
+	int ret;
+
+	address = reg_addr;
+
+	transmit_buffers[0].buf = &address;
+	transmit_buffers[0].len = 1;
+	transmit_buffers[1].buf = write_data;
+	transmit_buffers[1].len = len;
+    printf("write: ");
+    for(int i=0;i<len;i++){
+        printf(" %x ",write_data[i]);
+    }
+    printf("\r\n");
+
+	transmit_buffer_set.buffers = transmit_buffers;
+	transmit_buffer_set.count = 2;
+
+	ret = spi_write(intf_ptr,&spi_cfg, &transmit_buffer_set);
+
+	k_usleep(2);
+
+	return ret;
 }
 
 static void app_us_delay(uint32_t period, void *intf_ptr) {
@@ -229,14 +299,16 @@ int8_t configure_int(){
 
 
 int8_t init_bmi(){   
-    bmi3_dev.intf = BMI3_I2C_INTF;
+    bmi3_dev.intf = BMI3_SPI_INTF;
 	bmi3_dev.intf_ptr = bmi_dev;
 	bmi3_dev.intf_rslt = bmiResult;
 	bmi3_dev.dummy_byte = dByte;
-	bmi3_dev.read = app_i2c_read;
-	bmi3_dev.write = app_i2c_write;
+	bmi3_dev.read = app_spi_read;
+	bmi3_dev.write = app_spi_write;
 	bmi3_dev.delay_us = app_us_delay;
+    printf("bmiInitStart\r\n");
 	bmiResult = bmi3_init(&bmi3_dev);
+    /*
     bmi_data.event_size = 1;
     bmi_data.event_number = 0;
     bmi_data.package_number = 0;
@@ -249,7 +321,7 @@ int8_t init_bmi(){
     bmi_axis = &bmi_data.config[5];
     bmi_event_size = &bmi_data.event_size;
     bmi_data.nOutputs=3;
-
+*/
     /*
     *   config[]
     *   byte 0: enable
@@ -261,11 +333,12 @@ int8_t init_bmi(){
     *   byte 6: n-times repeating
     */
 
+/*
     if(DEBUG && bmiResult!=BMI323_OK){printk("bmi3_init error: %i\n\r",bmiResult);}
 
     if (bmi3_dev.chip_id == BMI323_CHIP_ID)
         {
-            /* Assign resolution to the structure */
+
             bmi3_dev.resolution = BMI323_16_BIT_RESOLUTION;
         }
         else
@@ -287,6 +360,6 @@ int8_t init_bmi(){
     bmiResult = bmi323_set_int_pin_config(&int_cfg, &bmi3_dev);
 
     bmiResult = apply_bmi_config(&bmi3_dev,BMI3_ACC_ODR_50HZ,BMI3_ACC_RANGE_16G,BMI3_GYR_RANGE_2000DPS,BMI3_GYR_AVG1,BMI3_GYR_MODE_SUSPEND); //mh this should be reworked
-
+    */
     return bmiResult;
 };
