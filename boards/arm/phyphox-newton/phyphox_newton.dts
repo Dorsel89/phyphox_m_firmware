@@ -184,6 +184,6 @@ my_spi_master: &spi1 {
  
  &usbd {
 	 compatible = "nordic,nrf-usbd";
-	 status = "okay";
+	 status = "disabled";
  };
  

@@ -37,8 +37,9 @@ static struct device *spi_dev;
 
 static struct bmi3_dev bmi3_dev;
 //static struct bmi3_data bmi_data;
-static struct bmi3_sens_config config[2] = {{ 0 }};
 static struct bmi3_sensor_data sensor_data[2] = {{ 0 }};
+static struct bmi3_sens_config config[2] = {{ 0 }};
+
 
 static uint8_t*  bmi_en;
 static uint8_t*  bmi_rate;

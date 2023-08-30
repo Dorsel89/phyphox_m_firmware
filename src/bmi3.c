@@ -1884,12 +1884,13 @@ int8_t bmi3_init(struct bmi3_dev *dev)
         /* Perform soft-reset to bring all register values to their default values */
         rslt = bmi3_soft_reset(dev);
         printf("softrest 1885\r\n");
-        return rslt;
+
+        
         if (rslt == BMI3_OK)
         {
             /* Read chip-id of the BMI3 sensor */
             rslt = bmi3_get_regs(BMI3_REG_CHIP_ID, chip_id, 2, dev);
-
+            
             if (rslt == BMI3_OK)
             {
                 dev->chip_id = chip_id[0];
@@ -2029,13 +2030,13 @@ int8_t bmi3_soft_reset(struct bmi3_dev *dev)
         {
             rslt = bmi3_get_regs(BMI3_REG_CHIP_ID, dummy_byte, 2, dev);
         }
-        return rslt;
+        
         /* Enabling Feature engine */
         if (rslt == BMI3_OK)
         {
             rslt = bmi3_set_regs(BMI3_REG_FEATURE_IO2, feature_data, 2, dev);
         }
-            
+        
         if (rslt == BMI3_OK)
         {
             /* Enabling feature status bit */
