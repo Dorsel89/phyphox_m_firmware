@@ -77,8 +77,8 @@ uint8_t battery_level(float adc_voltage){
 	float cap_voltage = adc_voltage;
 	//boost-buck converter works between 0.6V to 5V
 	//energy: 0.5*5F*voltage^2
-	float max_energy = 0.5*5*(pow(3,2)-pow(0.6,2));
-	float current_energy = 0.5*5*(pow(cap_voltage,2)-pow(0.6,2));
+	float max_energy = 0.5*5*(pow(2.9,2)-pow(0.65,2));
+	float current_energy = 0.5*5*(pow(cap_voltage,2)-pow(0.65,2));
 	bat = (uint8_t)current_energy*100/max_energy;
 	printf("adc: %f cap: %f maxE: %f currentE: %f bat: %i\n",adc_voltage,cap_voltage,max_energy,current_energy, bat);
 	if(*usb_status && bat>=90){
