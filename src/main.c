@@ -20,42 +20,42 @@
 
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/sensor.h>
+//#include <zephyr/drivers/usb_device.h>
+#include <zephyr/usb/usb_device.h>
 
 #include "tof.h"
 
 #include <nrfx_twi.h>
+#include "leds.h"
 
 
-#define SLEEP_TIME_MS   1000
-#define LED_B_NODE DT_ALIAS(led_blue)
-#define LED_G_NODE DT_ALIAS(led_green)
-#define LED_R_NODE DT_ALIAS(led_red)
 
-static const struct gpio_dt_spec ledB = GPIO_DT_SPEC_GET(LED_B_NODE, gpios);
-static const struct gpio_dt_spec ledG = GPIO_DT_SPEC_GET(LED_G_NODE, gpios);
-static const struct gpio_dt_spec ledR = GPIO_DT_SPEC_GET(LED_R_NODE, gpios);
+static bool usb_plugged_in = true;
 
+static void status_cb(enum usb_dc_status_code status, const uint8_t *param)
+{	
+	if(status == USB_DC_CONNECTED){
+		gpio_pin_set_dt(&ledB,1);
+		usb_plugged_in = true;
+	}else if (status == USB_DC_DISCONNECTED)
+	{
+		gpio_pin_set_dt(&ledB,0);
+		gpio_pin_set_dt(&ledG,0);
+		usb_plugged_in = false;
+	}
+}
 
 void main(void)
 {
 	uint8_t error;
 	
+	usb_enable(status_cb);
 	//init over-the-air updates
-
-	//os_mgmt_register_group();
-	//img_mgmt_register_group();
-	
-	//init ble, i2c, leds
 	
 	init_ble();
 	error = i2c_configure(device_get_binding("i2c"),I2C_SPEED_SET(I2C_SPEED_FAST));
 
-	
-	
 	k_sleep(K_MSEC(150));
-		
-		//spi_init();
-	//spi_write_test_msg();
 
 	//init sensors
 	init_bmp();
@@ -64,34 +64,11 @@ void main(void)
 	//init_tof();
 	//init_veml();
 	init_mlx();
-	init_BAS();
+	init_BAS(&usb_plugged_in);
 	
 	// LED
 
-	gpio_pin_configure_dt(&ledB, GPIO_OUTPUT_INACTIVE);
+	gpio_pin_configure_dt(&ledB, GPIO_OUTPUT_ACTIVE);
 	gpio_pin_configure_dt(&ledR, GPIO_OUTPUT_INACTIVE);
-	gpio_pin_configure_dt(&ledG, GPIO_OUTPUT_INACTIVE);
-	
-
-	
-	while (0) {
-		//BLUE
-		error = gpio_pin_toggle_dt(&ledB);
-		k_msleep(SLEEP_TIME_MS);
-		//RED
-		error = gpio_pin_toggle_dt(&ledB);
-		error = gpio_pin_toggle_dt(&ledR);
-		k_msleep(SLEEP_TIME_MS);
-		//GREEN
-		error = gpio_pin_toggle_dt(&ledR);
-		error = gpio_pin_toggle_dt(&ledG);
-		k_msleep(SLEEP_TIME_MS);
-		//OFF
-		error = gpio_pin_toggle_dt(&ledG);
-		k_msleep(SLEEP_TIME_MS);
-
-	}
-	
-
-	
+	gpio_pin_configure_dt(&ledG, GPIO_OUTPUT_INACTIVE);	
 }
