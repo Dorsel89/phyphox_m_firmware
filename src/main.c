@@ -15,12 +15,9 @@
 #include "veml6030.h"
 
 #include <zephyr/mgmt/mcumgr/transport/smp_bt.h>
-//#include "os_mgmt/os_mgmt.h"
-//#include "img_mgmt/img_mgmt.h"
 
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/sensor.h>
-//#include <zephyr/drivers/usb_device.h>
 #include <zephyr/usb/usb_device.h>
 
 #include "tof.h"
@@ -50,7 +47,6 @@ void main(void)
 	uint8_t error;
 	
 	usb_enable(status_cb);
-	//init over-the-air updates
 	
 	init_ble();
 	error = i2c_configure(device_get_binding("i2c"),I2C_SPEED_SET(I2C_SPEED_FAST));
@@ -61,8 +57,8 @@ void main(void)
 	init_bmp();
 	init_bmi();
 	init_shtc();
-	//init_tof();
-	//init_veml();
+	init_tof();
+	init_veml();
 	init_mlx();
 	init_BAS(&usb_plugged_in);
 	

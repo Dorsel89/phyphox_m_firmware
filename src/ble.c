@@ -165,7 +165,15 @@ static void bt_ready(void)
 	int err;
 
 	printk("Bluetooth initialized\n\r");
+	uint16_t serialNumber[1];
+	
+	memcpy(&serialNumber[0], (uint8_t *)0x10001080, 2);
+	printf("number: %i \r\n",serialNumber[0]);
 
+	char name[20];
+	sprintf(name, "Newton %d\n", serialNumber[0]);
+	
+	bt_set_name(name);
 	err = bt_le_adv_start(&adv_param_normal, ad, ARRAY_SIZE(ad), sd, ARRAY_SIZE(sd));
 	if (err) {
 		printk("Advertising failed to start (err %d)\n\r", err);
