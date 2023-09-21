@@ -5,7 +5,8 @@ VEML veml_data;
 TOF tof_data;
 MLX mlx_data;
 BMP bmp_data;
-
+PHYPHOX_EVENT event_data;
+float global_timestamp = 0;
 static const struct bt_le_adv_param adv_param_normal = {
 	.options = BT_LE_ADV_OPT_CONNECTABLE | BT_LE_ADV_OPT_USE_NAME,
 	.interval_min = BT_GAP_ADV_SLOW_INT_MIN,
@@ -52,6 +53,9 @@ static ssize_t config_submits(struct bt_conn *conn, const struct bt_gatt_attr *a
 	}
 	if(attr->uuid == &mlx_cnfg.uuid){
 		submit_config_mlx();
+	}
+	if(attr->uuid == &event_uuid.uuid){
+		phyphox_event_received();
 	}	
 	return len;
 };
@@ -135,15 +139,22 @@ BT_GATT_CHARACTERISTIC(&bmi_acc_uuid,
 			       BT_GATT_PERM_READ,
 			       read_u16, NULL, &bmi_data.acc_array[0]),
 	BT_GATT_CCC(ccc_cfg_changed,
-		    BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),
-			
+		    BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),		
     BT_GATT_CHARACTERISTIC(&bmi_cnfg,					
 			       BT_GATT_CHRC_WRITE | BT_GATT_CHRC_NOTIFY,
 			       BT_GATT_PERM_WRITE,
 			       NULL, config_submits, &bmi_data.config[0]),
 				   
 	BT_GATT_CCC(ccc_cfg_changed,	//notification handler
-		    BT_GATT_PERM_READ | BT_GATT_PERM_WRITE)		
+		    BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),
+	//EVENT SERVICE			
+	BT_GATT_PRIMARY_SERVICE(&event_service_uuid),
+	BT_GATT_CHARACTERISTIC(&event_uuid,					
+			       BT_GATT_CHRC_WRITE | BT_GATT_CHRC_NOTIFY,
+			       BT_GATT_PERM_WRITE,
+			       NULL, config_submits, &event_data.config[0]),
+	BT_GATT_CCC(ccc_cfg_changed,	//notification handler
+		    BT_GATT_PERM_READ | BT_GATT_PERM_WRITE)				
 );
 // PRIMARY ADVERTISING DATA
 static const struct bt_data ad[] = {
@@ -168,7 +179,13 @@ static void bt_ready(void)
 	uint16_t serialNumber[1];
 	
 	memcpy(&serialNumber[0], (uint8_t *)0x10001080, 2);
+
+	if(serialNumber[1]==0x00 | serialNumber[1]==0xffff){
+		serialNumber[1]=0;
+	}
+
 	printf("number: %i \r\n",serialNumber[0]);
+
 
 	char name[20];
 	sprintf(name, "Newton %d\n", serialNumber[0]);

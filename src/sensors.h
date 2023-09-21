@@ -28,6 +28,8 @@ static inline float sensor_value_to_float(const struct sensor_value *val)
 	return (float)val->val1 + (float)val->val2 / 1000000;
 }
 
+
+
 typedef struct {
 	int max_events;
 	int current_event;
@@ -43,7 +45,9 @@ typedef struct {
 	int event_number;
 	int nOutputs;
 	int16_t acc_array[3*30+2];//x,y,z,t
+	float acc_time[1];
 	int16_t gyr_array[3*30+2];//x,y,z,t
+	float gyr_time[1];
 	uint8_t config[20];
 	uint32_t package_number;
 }BMI;
@@ -73,10 +77,16 @@ typedef struct {
 	uint8_t integration_time;
 }VEML;
 
+typedef struct {
+	uint8_t config[20];
+}PHYPHOX_EVENT;
+
 extern BMP bmp_data;
 extern BMI bmi_data;
 extern MLX mlx_data;
 extern TOF tof_data;
 extern VEML veml_data;
+extern PHYPHOX_EVENT event_data;
+extern float global_timestamp;
 
 #endif // SENSORS_H

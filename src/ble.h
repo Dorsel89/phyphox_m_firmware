@@ -19,6 +19,7 @@
 #include "bmpZephyr.h"
 #include "tof.h"
 #include "mlxZephyr.h"
+#include "event.h"
 
 #include "bas.h"
 
@@ -36,6 +37,7 @@ static void ccc_cfg_changed(const struct bt_gatt_attr *attr,
 }
 
 static struct bt_uuid_128 data_service_uuid = BT_UUID_INIT_128(BT_UUID_128_ENCODE(0xcddf1001, 0x30f7, 0x4671, 0x8b43, 0x5e40ba53514a));
+static struct bt_uuid_128 event_service_uuid = BT_UUID_INIT_128(BT_UUID_128_ENCODE(0xcddf0001, 0x30f7, 0x4671, 0x8b43, 0x5e40ba53514a));
 //BMP
 static struct bt_uuid_128 bmp_uuid = BT_UUID_INIT_128(BT_UUID_128_ENCODE(0xcddf1007, 0x30f7, 0x4671, 0x8b43, 0x5e40ba53514a));
 static struct bt_uuid_128 bmp_cnfg = BT_UUID_INIT_128(BT_UUID_128_ENCODE(0xcddf1008, 0x30f7, 0x4671, 0x8b43, 0x5e40ba53514a)); 
@@ -62,5 +64,8 @@ static struct bt_uuid_128 mlx_cnfg = BT_UUID_INIT_128(BT_UUID_128_ENCODE(0xcddf1
 
 static struct bt_uuid_128 hardware_uuid = BT_UUID_INIT_128(BT_UUID_128_ENCODE(0xcddf1021, 0x30f7, 0x4671, 0x8b43, 0x5e40ba53514a)); 
 static struct bt_uuid_128 hardware_cnfg = BT_UUID_INIT_128(BT_UUID_128_ENCODE(0xcddf1022, 0x30f7, 0x4671, 0x8b43, 0x5e40ba53514a));
+
+static struct bt_uuid_128 event_uuid = BT_UUID_INIT_128(BT_UUID_128_ENCODE(0xcddf0004, 0x30f7, 0x4671, 0x8b43, 0x5e40ba53514a)); 
+
 
 #endif

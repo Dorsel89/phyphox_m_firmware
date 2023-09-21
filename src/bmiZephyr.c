@@ -104,11 +104,13 @@ static float lsb_to_dps(int16_t val, float dps, uint8_t bit_width)
     return (dps / (half_scale)) * (val);
 }
 extern void send_data_bmi(void){
-    uint64_t time = k_uptime_get_32();
-    printk("t: %llu\n\r", time);
     uint16_t int_status = 0;
     bmiResult = bmi323_get_int1_status(&int_status, &bmi3_dev);
     if (int_status & BMI3_INT_STATUS_GYR_DRDY){
+        
+        if(bmi_data.event_number==0){
+            bmi_data.acc_time[0]=(k_uptime_ticks()/32768.0)-global_timestamp;
+        }
 
         //bmiResult = bmi323_get_sensor_data(sensor_data, 2, &bmi3_dev);
         bmiResult = bmi323_get_acc_gyr_fast(sensor_data, 2, &bmi3_dev);
@@ -132,11 +134,14 @@ extern void send_data_bmi(void){
 
         bmi_data.event_number++;
         if(bmi_data.event_number == bmi_data.event_size){
+            //printf("TICKS: %d\r\n",k_uptime_ticks());
             int16_t buffer[2];
-            uint32_t pck_number = bmi_data.package_number;
-            memcpy(&buffer[0],&pck_number,4);
+
+            memcpy(&buffer[0],&bmi_data.acc_time[0],4);
             bmi_data.gyr_array[0] = buffer[0];
             bmi_data.gyr_array[1] = buffer[1];         
+            bmi_data.acc_array[0] = buffer[0];
+            bmi_data.acc_array[1] = buffer[1];         
             send_data(SENSOR_BMI323_GYR_ID, &bmi_data.gyr_array, bmi_data.event_size*bmi_data.nOutputs*2+4);           
             send_data(SENSOR_BMI323_ACC_ID, &bmi_data.acc_array, bmi_data.event_size*bmi_data.nOutputs*2+4);           
             bmi_data.event_number=0;
