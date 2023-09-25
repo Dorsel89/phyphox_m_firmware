@@ -231,7 +231,7 @@ static int8_t apply_bmi_config(struct bmi3_dev *dev, uint8_t rate,uint8_t acc_ra
             config[1].cfg.acc.acc_mode = mode;//BMI3_ACC_MODE_HIGH_PERF;
             
             /* Set the con figurations. */
-            rslt = bmi323_set_sensor_config(config, 1, dev);
+            rslt = bmi323_set_sensor_config(config, 2, dev);
         }
     }
 

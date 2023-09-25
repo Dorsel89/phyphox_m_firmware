@@ -14,7 +14,7 @@
 #include "bmiZephyr.h"
 #include "veml6030.h"
 
-#include <zephyr/mgmt/mcumgr/transport/smp_bt.h>
+//#include <zephyr/mgmt/mcumgr/transport/smp_bt.h>
 
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/sensor.h>
@@ -44,6 +44,7 @@ static void status_cb(enum usb_dc_status_code status, const uint8_t *param)
 
 void main(void)
 {
+	printf("------------------\r\n");
 	uint8_t error;
 	
 	usb_enable(status_cb);

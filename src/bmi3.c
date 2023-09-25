@@ -1911,6 +1911,9 @@ int8_t bmi3_init(struct bmi3_dev *dev)
  */
 int8_t bmi3_get_regs(uint8_t reg_addr, uint8_t *data, uint16_t len, struct bmi3_dev *dev)
 {
+
+    printf("reg_addr: %i\r\n",reg_addr);
+    printf("len: %i\r\n",len);
     /* Variable to store result of API */
     int8_t rslt;
 
@@ -2363,7 +2366,9 @@ int8_t bmi3_get_sensor_config(struct bmi3_sens_config *sens_cfg, uint8_t n_sens,
 
     /* Null-pointer check */
     rslt = null_ptr_check(dev);
-
+    printf("nullptr: 2366 %i \r\n",rslt);
+    printf("sens_cfg:  %i \r\n",sens_cfg);
+    printf("n_sens:  %i \r\n",n_sens);
     if ((rslt == BMI3_OK) && (sens_cfg != NULL))
     {
         for (loop = 0; loop < n_sens; loop++)
@@ -2371,10 +2376,12 @@ int8_t bmi3_get_sensor_config(struct bmi3_sens_config *sens_cfg, uint8_t n_sens,
             switch (sens_cfg[loop].type)
             {
                 case BMI3_ACCEL:
+                printf("accel\r\n");
                     rslt = get_accel_config(&sens_cfg[loop].cfg.acc, dev);
                     break;
 
                 case BMI3_GYRO:
+                printf("gyro\r\n");
                     rslt = get_gyro_config(&sens_cfg[loop].cfg.gyr, dev);
                     break;
 
@@ -5160,8 +5167,9 @@ static int8_t get_gyro_config(struct bmi3_gyro_config *config, struct bmi3_dev *
     if (config != NULL)
     {
         /* Read the sensor configuration details */
+        printf("working:\r\n");
         rslt = bmi3_get_regs(BMI3_REG_GYR_CONF, data_array, 2, dev);
-
+        printf("not working:\r\n");
         if (rslt == BMI3_OK)
         {
             reg_data = data_array[0];
