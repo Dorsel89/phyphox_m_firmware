@@ -180,8 +180,8 @@ static void bt_ready(void)
 	
 	memcpy(&serialNumber[0], (uint8_t *)0x10001080, 2);
 
-	if(serialNumber[1]==0x00 | serialNumber[1]==0xffff){
-		serialNumber[1]=0;
+	if(serialNumber[0]==0x00 || serialNumber[0]==0xffff){
+		serialNumber[0]=0;
 	}
 
 	printf("number: %i \r\n",serialNumber[0]);
