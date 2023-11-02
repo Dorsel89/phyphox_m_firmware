@@ -110,16 +110,11 @@ static void set_config_mlx(){
 		printk("resolution x: %d \n",mlx_data.config[4]);
 		printk("resolution y: %d \n",mlx_data.config[5]);
 		printk("resolution z: %d \n",mlx_data.config[6]);
-		printk("number of samples: %i \n",mlx_data.config[7]);
 	}
-	if(0<mlx_data.config[7]<=MLX90393_MAXSAMPLES){
-    	mlx_data.samplesPerPackage = mlx_data.config[7];
-  	}else{
-    	mlx_data.samplesPerPackage = 1;
-  	}
-	
+
+	mlx_data.samplesPerPackage = 1;	
 	//if the choosen data rate is too high, take more samples per package
-	while(MLX_DATARATE[mlx_data.config[2]][mlx_data.config[3]]>80*mlx_data.samplesPerPackage && mlx_data.samplesPerPackage<MLX90393_MAXSAMPLES){
+	while(MLX_DATARATE[mlx_data.config[2]][mlx_data.config[3]]>70*mlx_data.samplesPerPackage && mlx_data.samplesPerPackage<MLX90393_MAXSAMPLES){
 		mlx_data.samplesPerPackage +=1;
 	}
 	printk("number of samples set to: %i \n",mlx_data.samplesPerPackage);

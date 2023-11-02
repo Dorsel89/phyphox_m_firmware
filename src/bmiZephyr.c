@@ -52,12 +52,6 @@ static BMI3_INTF_RET_TYPE app_spi_read(uint8_t reg_addr, uint8_t *read_data, uin
 	//ret = spi_transceive(spi_dev,&spi_cfg, &transmit_buffer_set, &receive_buffers_set);
     ret = spi_transceive(intf_ptr,&spi_cfg, &transmit_buffer_set, &receive_buffers_set);
     //ret = spi_read(intf_ptr,&spi_cfg,&receive_buffers_set);
-    printf("read, len: %i ",len);
-
-    for(int i=0; i<len; i++){
-        printf(" %x",read_data[i]);
-    }
-    printf("\r\n");
 	k_usleep(2);
 
 	return ret;

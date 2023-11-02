@@ -93,14 +93,25 @@ static int8_t set_config(struct bmp5_osr_odr_press_config *osr_odr_press_cfg, st
         if (rslt == BMP5_OK)
         {
             /* Set ODR as 50Hz */
-            osr_odr_press_cfg->odr = BMP5_ODR_45_HZ;
+            osr_odr_press_cfg->odr = BMP5_ODR_240_HZ;//irrelevant due to continous mode
 
             /* Enable pressure */
             osr_odr_press_cfg->press_en = BMP5_ENABLE;
 
             /* Set Over-sampling rate with respect to odr */
-            osr_odr_press_cfg->osr_t = BMP5_OVERSAMPLING_2X;
-            osr_odr_press_cfg->osr_p = BMP5_OVERSAMPLING_32X;
+            uint8_t oversampling_t;
+            if(bmp_data.odr <= BMP5_OVERSAMPLING_16X){
+                oversampling_t = BMP5_OVERSAMPLING_1X;
+            }else if (bmp_data.odr == BMP5_OVERSAMPLING_32X){
+                oversampling_t = BMP5_OVERSAMPLING_2X;
+            }else if (bmp_data.odr == BMP5_OVERSAMPLING_64X){
+                oversampling_t = BMP5_OVERSAMPLING_4X;
+            }else if (bmp_data.odr == BMP5_OVERSAMPLING_128X){
+                oversampling_t = BMP5_OVERSAMPLING_8X;
+            }
+            
+            osr_odr_press_cfg->osr_t = oversampling_t;
+            osr_odr_press_cfg->osr_p = bmp_data.oversampling_p;
 
             rslt = bmp5_set_osr_odr_press_config(osr_odr_press_cfg, dev);
             bmp5_error_codes_print_result("bmp5_set_osr_odr_press_config", rslt);
@@ -179,7 +190,7 @@ extern void send_data_bmp(void){
 
     bmp_data.array[0+bmp_data.current_event*3]=bmp_data.pressure;
     bmp_data.array[1+bmp_data.current_event*3]=bmp_data.temperature;
-    bmp_data.array[2+bmp_data.current_event*3]=k_uptime_get()/1000.0;
+    bmp_data.array[2+bmp_data.current_event*3]=(k_uptime_get()/1000.0)-global_timestamp;
     
     bmp_data.current_event++;
     if(bmp_data.current_event == bmp_data.max_events){
@@ -251,20 +262,34 @@ extern uint8_t sleep_bmp(bool SLEEP){
     if(SLEEP){
             uint8_t rslt = bmp5_set_power_mode(BMP5_POWERMODE_STANDBY, &bmp581_dev);
     }else{
-        //TODO
+        bmp5_set_power_mode(BMP5_POWERMODE_CONTINOUS, &bmp581_dev);
     }    
 }
 
 void submit_config_bmp(){
+    sleep_bmp(true);
     if(DEBUG){
         printf("BMP: setting config to\n");
         printf("enable: %d \n",bmp_data.config[0]);
     }
-
+    bmp_data.oversampling_p = bmp_data.config[1];
+    bmp_data.iir = bmp_data.config[2];
+    osr_odr_press_cfg.osr_p=bmp_data.oversampling_p;
+    bmi_data.event_number = 0;
+    if(bmp_data.oversampling_p <= BMP5_OVERSAMPLING_2X){
+        bmi_data.event_size = 10;
+    }else if (bmp_data.oversampling_p <= BMP5_OVERSAMPLING_8X){
+        bmi_data.event_size = 4;
+    }else if (bmp_data.oversampling_p == BMP5_OVERSAMPLING_16X){
+        bmi_data.event_size = 2;
+    }else{
+        bmi_data.event_size = 1;
+    }
+    
     set_config(&osr_odr_press_cfg, &bmp581_dev);
 
     if(bmp_data.config[0]){
-        bmp5_set_power_mode(BMP5_POWERMODE_NORMAL, &bmp581_dev);
+        sleep_bmp(false);
     }else{
         sleep_bmp(true);
     }

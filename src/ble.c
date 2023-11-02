@@ -15,7 +15,7 @@ static const struct bt_le_adv_param adv_param_normal = {
 
 static const struct bt_le_conn_param conn_paramter = {
 	.interval_min = 6,
-	.interval_max = 200,
+	.interval_max = 1000,
 	.latency = 0,
 	.timeout = 10
 };
@@ -188,7 +188,7 @@ static void bt_ready(void)
 
 
 	char name[20];
-	sprintf(name, "Newton %d\n", serialNumber[0]);
+	sprintf(name, "phyphox:m %d\n", serialNumber[0]);
 	
 	bt_set_name(name);
 	err = bt_le_adv_start(&adv_param_normal, ad, ARRAY_SIZE(ad), sd, ARRAY_SIZE(sd));

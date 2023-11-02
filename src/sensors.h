@@ -38,6 +38,9 @@ typedef struct {
 	float timestamp;
 	float array[3*10];
 	uint8_t config[20];
+	uint8_t odr;
+	uint8_t oversampling_p;
+	uint8_t iir;
 }BMP;
 
 typedef struct {
@@ -66,12 +69,12 @@ typedef struct {
 typedef struct {
 	int event_size;
 	int event_number;
-	uint16_t data_array[2*2];//distance, sigma distance
+	uint8_t data_array[2*(2+2+4)];//distance, sigma distance
 	uint8_t config[20];
 }TOF;
 
 typedef struct {
-	uint16_t data_array[2];//distance, sigma distance
+	uint8_t data_array[8];//distance, sigma distance
 	uint8_t config[20];
 	uint8_t gain;
 	uint8_t integration_time;
