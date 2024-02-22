@@ -7,6 +7,7 @@
 #include <zephyr/drivers/adc.h>
 #include <hal/nrf_saadc.h>
 #include <math.h>
+#include "leds.h"
 
 #define ADC_RESOLUTION 12
 #define ADC_GAIN ADC_GAIN_1_6
@@ -32,6 +33,7 @@ static struct k_work work_bas;
 
 const static struct device *adc_dev;
 
+static bool* usb_status;
 extern void init_BAS();
 void update_supercap_level();
 float getVoltage();

@@ -85,27 +85,44 @@ uint8_t sleep_tof(bool b){
         VL53L4CD_ClearInterrupt(dev);
         VL53L4CD_GetResult(dev, &results);
     }else{
-        //TODO
+        status = VL53L4CD_StartRanging(dev);
     }
 }
 
 extern void send_data_tof(void){
-    //TODO
-    uint32_t time = k_uptime_get_32;
+    
+    float timeval[1];
+    timeval[0] =(k_uptime_ticks()/32768.0)-global_timestamp;
     VL53L4CD_ClearInterrupt(dev);
     VL53L4CD_GetResult(dev, &results);
     if(results.range_status == 0){
-        tof_data.data_array[2*tof_data.event_number] = results.distance_mm;
-        tof_data.data_array[2*tof_data.event_number+1] = results.sigma_mm;
+        memcpy(&tof_data.data_array[(2+2+4)*tof_data.event_number+0],&results.distance_mm,2);
+        memcpy(&tof_data.data_array[(2+2+4)*tof_data.event_number+2],&results.sigma_mm,2);
+        memcpy(&tof_data.data_array[(2+2+4)*tof_data.event_number+4],&timeval,4);
+
+/*
+        tof_data.data_array[4*tof_data.event_number] = results.distance_mm;
+        tof_data.data_array[4*tof_data.event_number+1] = results.sigma_mm;
+
+        memcpy(&tof_data.data_array[4*tof_data.event_number+3],&timeval,4);
+*/        
         tof_data.event_number+=1;
         if(tof_data.event_number == tof_data.event_size){
-            send_data(SENSOR_TOF_ID, &tof_data.data_array, tof_data.event_size*2*2);
+            send_data(SENSOR_TOF_ID, &tof_data.data_array, tof_data.event_size*(2+2+4));
             tof_data.event_number=0;
         }
     }
 }
 void update_config_tof(){
-    status = VL53L4CD_StartRanging(dev);
+    sleep_tof(true);
+    uint32_t timing_budget = 10* tof_data.config[1];
+    if(timing_budget=0){
+        timing_budget=10;
+    }else if (timing_budget > 200){
+        timing_budget = 200;
+    }
+    status = VL53L4CD_SetRangeTiming(dev, timing_budget, 0);
+    sleep_tof(!tof_data.config[0]);
 }
 
 static void tofDataReady(const struct device *dev, struct gpio_callback *cb,uint32_t pins){

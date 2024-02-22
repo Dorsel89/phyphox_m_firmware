@@ -43,7 +43,7 @@ void send_data_shtc()
     shtc_data.timestamp = timestamp;
     shtc_data.array[0] = shtc_data.temperature;
     shtc_data.array[1] = shtc_data.humidity;
-    shtc_data.array[2] = shtc_data.timestamp;
+    shtc_data.array[2] = shtc_data.timestamp-global_timestamp;
 
     //printk("%f || %f \n", shtc_data.temperature, shtc_data.humidity);
 

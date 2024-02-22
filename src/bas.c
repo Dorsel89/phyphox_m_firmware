@@ -1,7 +1,7 @@
 #include "bas.h"
 
 static int16_t m_sample_buffer[BUFFER_SIZE];
-
+static bool* usb_status = NULL;
 float getVoltage(){
 
 	int ret;
@@ -42,9 +42,10 @@ static const struct adc_channel_cfg m_1st_channel_cfg = {
 };
 
 
-extern void init_BAS(){
+extern void init_BAS(bool* usb_status_pointer){
 	
 	int err = 0;
+	usb_status = usb_status_pointer;
 	adc_dev = DEVICE_DT_GET(DT_NODELABEL(adc));
 	if(adc_dev == NULL){
 		printf("issue..\n");
@@ -76,10 +77,14 @@ uint8_t battery_level(float adc_voltage){
 	float cap_voltage = adc_voltage;
 	//boost-buck converter works between 0.6V to 5V
 	//energy: 0.5*5F*voltage^2
-	float max_energy = 0.5*5*(pow(3,2)-pow(0.6,2));
-	float current_energy = 0.5*5*(pow(cap_voltage,2)-pow(0.6,2));
+	float max_energy = 0.5*5*(pow(2.9,2)-pow(0.65,2));
+	float current_energy = 0.5*5*(pow(cap_voltage,2)-pow(0.65,2));
 	bat = (uint8_t)current_energy*100/max_energy;
 	printf("adc: %f cap: %f maxE: %f currentE: %f bat: %i\n",adc_voltage,cap_voltage,max_energy,current_energy, bat);
+	if(*usb_status && bat>=95){
+		gpio_pin_configure_dt(&ledB, GPIO_OUTPUT_INACTIVE);
+		gpio_pin_configure_dt(&ledG, GPIO_OUTPUT_ACTIVE);
+	}
 	return bat;
 };
 

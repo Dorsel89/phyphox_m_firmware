@@ -1,24 +1,89 @@
 #include "bmiZephyr.h"
 static const struct gpio_dt_spec bmiInt = GPIO_DT_SPEC_GET_OR(BMI_INT, gpios,{0});
 static struct gpio_callback bmiInt_cb_data;
+
 static void bmiDataReady(const struct device *dev, struct gpio_callback *cb,uint32_t pins)
 {
 	k_work_submit(&work_bmi);
 }
+
+
+static struct k_poll_signal spi_done_sig = K_POLL_SIGNAL_INITIALIZER(spi_done_sig);
+
+struct spi_cs_control spim_cs = {
+	.gpio = SPI_CS_GPIOS_DT_SPEC_GET(DT_NODELABEL(reg_my_spi_master)),
+	.delay = 0,
+};
+static const struct spi_config spi_cfg = {
+	.operation = SPI_WORD_SET(8) | SPI_TRANSFER_MSB |
+				 SPI_MODE_CPOL | SPI_MODE_CPHA,
+	.frequency = 8000000,
+	.slave = 0,
+	.cs = &spim_cs,
+};
+
 int count = 0;
-static BMI3_INTF_RET_TYPE app_i2c_read(uint8_t reg_addr, uint8_t *read_data, uint32_t len, void *intf_ptr) {
+static BMI3_INTF_RET_TYPE app_spi_read(uint8_t reg_addr, uint8_t *read_data, uint32_t len, void *intf_ptr) {
 	uint8_t ret;
-	//ret = i2c_write(intf_ptr, &reg_addr, 1, BMI384_I2C_ADDR);
-	//ret = i2c_read(intf_ptr, read_data, len, BMI384_I2C_ADDR);
-    ret = i2c_write_read(intf_ptr,BMI384_I2C_ADDR,&reg_addr,1,read_data,len);
+	//ret = i2c_write_read(intf_ptr,BMI384_I2C_ADDR,&reg_addr,1,read_data,len);
+    uint8_t address[1];
+	struct spi_buf transmit_buffer;
+	struct spi_buf_set transmit_buffer_set;
+	struct spi_buf receive_buffers[2];
+	struct spi_buf_set receive_buffers_set;
+
+	address[0] = reg_addr;
+	//address[1] = 0x00;
+
+	transmit_buffer.buf = address;
+	transmit_buffer.len = sizeof(address);
+
+	transmit_buffer_set.buffers = &transmit_buffer;
+	transmit_buffer_set.count = 1;
+
+	receive_buffers[0].buf = NULL;
+	receive_buffers[0].len = 1;
+	receive_buffers[1].buf = read_data;
+	receive_buffers[1].len = len;
+
+	receive_buffers_set.buffers = receive_buffers;
+	receive_buffers_set.count = 2;
+
+	//ret = spi_transceive(spi_dev,&spi_cfg, &transmit_buffer_set, &receive_buffers_set);
+    ret = spi_transceive(intf_ptr,&spi_cfg, &transmit_buffer_set, &receive_buffers_set);
+    //ret = spi_read(intf_ptr,&spi_cfg,&receive_buffers_set);
+	k_usleep(2);
+
 	return ret;
 }
 
-static BMI3_INTF_RET_TYPE app_i2c_write(uint8_t reg_addr, const uint8_t *write_data, uint32_t len, void *intf_ptr) {
+static BMI3_INTF_RET_TYPE app_spi_write(uint8_t reg_addr, const uint8_t *write_data, uint32_t len, void *intf_ptr) {
+    /*
 	uint8_t dataBuffer[len+1];
 	dataBuffer[0]=reg_addr;
 	memcpy(&dataBuffer[0]+1,write_data,len);
 	return i2c_write(intf_ptr, &dataBuffer, len+1, BMI384_I2C_ADDR);
+    */
+    uint8_t address;
+	struct spi_buf transmit_buffers[2];
+	struct spi_buf_set transmit_buffer_set;
+	int ret;
+
+	address = reg_addr;
+
+	transmit_buffers[0].buf = &address;
+	transmit_buffers[0].len = 1;
+	transmit_buffers[1].buf = write_data;
+	transmit_buffers[1].len = len;
+
+
+	transmit_buffer_set.buffers = transmit_buffers;
+	transmit_buffer_set.count = 2;
+
+	ret = spi_write(intf_ptr,&spi_cfg, &transmit_buffer_set);
+	k_usleep(2);
+
+	return ret;
 }
 
 static void app_us_delay(uint32_t period, void *intf_ptr) {
@@ -33,11 +98,13 @@ static float lsb_to_dps(int16_t val, float dps, uint8_t bit_width)
     return (dps / (half_scale)) * (val);
 }
 extern void send_data_bmi(void){
-    uint64_t time = k_uptime_get_32();
-    printk("t: %llu\n\r", time);
     uint16_t int_status = 0;
     bmiResult = bmi323_get_int1_status(&int_status, &bmi3_dev);
     if (int_status & BMI3_INT_STATUS_GYR_DRDY){
+        
+        if(bmi_data.event_number==0){
+            bmi_data.acc_time[0]=(k_uptime_ticks()/32768.0)-global_timestamp;
+        }
 
         //bmiResult = bmi323_get_sensor_data(sensor_data, 2, &bmi3_dev);
         bmiResult = bmi323_get_acc_gyr_fast(sensor_data, 2, &bmi3_dev);
@@ -61,11 +128,14 @@ extern void send_data_bmi(void){
 
         bmi_data.event_number++;
         if(bmi_data.event_number == bmi_data.event_size){
+            //printf("TICKS: %d\r\n",k_uptime_ticks());
             int16_t buffer[2];
-            uint32_t pck_number = bmi_data.package_number;
-            memcpy(&buffer[0],&pck_number,4);
+
+            memcpy(&buffer[0],&bmi_data.acc_time[0],4);
             bmi_data.gyr_array[0] = buffer[0];
             bmi_data.gyr_array[1] = buffer[1];         
+            bmi_data.acc_array[0] = buffer[0];
+            bmi_data.acc_array[1] = buffer[1];         
             send_data(SENSOR_BMI323_GYR_ID, &bmi_data.gyr_array, bmi_data.event_size*bmi_data.nOutputs*2+4);           
             send_data(SENSOR_BMI323_ACC_ID, &bmi_data.acc_array, bmi_data.event_size*bmi_data.nOutputs*2+4);           
             bmi_data.event_number=0;
@@ -79,6 +149,14 @@ extern void send_data_bmi(void){
 
 static int8_t apply_bmi_config(struct bmi3_dev *dev, uint8_t rate,uint8_t acc_range,uint8_t gyr_range, uint8_t average, uint8_t mode)
 {
+    printf("apply bmi config\r\n");
+    /*
+    printf("rate: %x \r\n",rate);
+    printf("acc_range: %x \r\n",acc_range);
+    printf("BMI3_ACC_BW_ODR_QUARTER: %x \r\n",BMI3_ACC_BW_ODR_QUARTER);
+    printf("average: %x \r\n",average);
+    printf("mode: %x \r\n",mode);
+*/
     struct bmi3_map_int map_int = { 0 };
 
     /* Status of API are returned to this variable. */
@@ -101,6 +179,7 @@ static int8_t apply_bmi_config(struct bmi3_dev *dev, uint8_t rate,uint8_t acc_ra
         
         /* Map data ready interrupt to interrupt pin. */
         rslt = bmi323_map_interrupt(map_int, dev);
+        
         //bmi3_error_codes_print_result("Map interrupt", rslt);
 
         if (rslt == BMI323_OK)
@@ -111,7 +190,7 @@ static int8_t apply_bmi_config(struct bmi3_dev *dev, uint8_t rate,uint8_t acc_ra
 
             /* Gyroscope Angular Rate Measurement Range. By default the range is 2000dps. */
             config[0].cfg.gyr.range = gyr_range;// BMI3_GYR_RANGE_250DPS;
-
+            
             /*  The Gyroscope bandwidth coefficient defines the 3 dB cutoff frequency in relation to the ODR
              *  Value   Name      Description
              *    0   odr_half   BW = gyr_odr/2
@@ -121,7 +200,7 @@ static int8_t apply_bmi_config(struct bmi3_dev *dev, uint8_t rate,uint8_t acc_ra
 
             /* By default the gyro is disabled. Gyro is enabled by selecting the mode. */
             config[0].cfg.gyr.gyr_mode = mode; //BMI3_GYR_MODE_HIGH_PERF;
-
+            
             /* Value    Name    Description
              *  000     avg_1   No averaging; pass sample without filtering
              *  001     avg_2   Averaging of 2 samples
@@ -136,14 +215,17 @@ static int8_t apply_bmi_config(struct bmi3_dev *dev, uint8_t rate,uint8_t acc_ra
             
             //bmi3_error_codes_print_result("Set sensor config", rslt);
 
+            
             config[1].cfg.acc.odr =rate ;//BMI3_ACC_ODR_100HZ;
+            //CRASHES HERE
             config[1].cfg.acc.range = acc_range;// BMI3_ACC_RANGE_2G;
+            
             config[1].cfg.acc.bwp = BMI3_ACC_BW_ODR_QUARTER;
             config[1].cfg.acc.avg_num = average; //BMI3_ACC_AVG1;
             config[1].cfg.acc.acc_mode = mode;//BMI3_ACC_MODE_HIGH_PERF;
-
-            /* Set the configurations. */
-            rslt = bmi323_set_sensor_config(config, 2, dev);
+            
+            /* Set the con figurations. */
+            rslt = bmi323_set_sensor_config(config, 1, dev);
         }
     }
 
@@ -229,14 +311,16 @@ int8_t configure_int(){
 
 
 int8_t init_bmi(){   
-    bmi3_dev.intf = BMI3_I2C_INTF;
+    bmi3_dev.intf = BMI3_SPI_INTF;
 	bmi3_dev.intf_ptr = bmi_dev;
 	bmi3_dev.intf_rslt = bmiResult;
 	bmi3_dev.dummy_byte = dByte;
-	bmi3_dev.read = app_i2c_read;
-	bmi3_dev.write = app_i2c_write;
+	bmi3_dev.read = app_spi_read;
+	bmi3_dev.write = app_spi_write;
 	bmi3_dev.delay_us = app_us_delay;
+    printf("bmiInitStart\r\n");
 	bmiResult = bmi3_init(&bmi3_dev);
+    
     bmi_data.event_size = 1;
     bmi_data.event_number = 0;
     bmi_data.package_number = 0;
@@ -261,11 +345,12 @@ int8_t init_bmi(){
     *   byte 6: n-times repeating
     */
 
+
     if(DEBUG && bmiResult!=BMI323_OK){printk("bmi3_init error: %i\n\r",bmiResult);}
 
     if (bmi3_dev.chip_id == BMI323_CHIP_ID)
         {
-            /* Assign resolution to the structure */
+
             bmi3_dev.resolution = BMI323_16_BIT_RESOLUTION;
         }
         else
@@ -274,18 +359,20 @@ int8_t init_bmi(){
         }
 
    // configure interrupt
+   
     configure_int();
     sensor_data[0].type = BMI323_GYRO;
     sensor_data[1].type = BMI323_ACCEL;
     struct bmi3_int_pin_config int_cfg = { 0 };
     bmiResult = bmi323_get_int_pin_config(&int_cfg, &bmi3_dev);
+    
     int_cfg.pin_type = BMI3_INT1;
     int_cfg.pin_cfg[0].output_en = BMI3_INT_OUTPUT_ENABLE;
     int_cfg.pin_cfg[0].lvl = BMI3_INT_ACTIVE_LOW;
 
     int_cfg.pin_cfg[0].od = BMI3_INT_OPEN_DRAIN;
     bmiResult = bmi323_set_int_pin_config(&int_cfg, &bmi3_dev);
-
+    
     bmiResult = apply_bmi_config(&bmi3_dev,BMI3_ACC_ODR_50HZ,BMI3_ACC_RANGE_16G,BMI3_GYR_RANGE_2000DPS,BMI3_GYR_AVG1,BMI3_GYR_MODE_SUSPEND); //mh this should be reworked
 
     return bmiResult;

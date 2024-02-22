@@ -1862,7 +1862,8 @@ int8_t bmi3_init(struct bmi3_dev *dev)
 
     /* Null-pointer check */
     rslt = null_ptr_check(dev);
-
+    printf("nullptrcheck 1865\r\n");
+    
     if (rslt == BMI3_OK)
     {
         dev->chip_id = 0;
@@ -1882,12 +1883,14 @@ int8_t bmi3_init(struct bmi3_dev *dev)
     {
         /* Perform soft-reset to bring all register values to their default values */
         rslt = bmi3_soft_reset(dev);
+        printf("softrest 1885\r\n");
 
+        
         if (rslt == BMI3_OK)
         {
             /* Read chip-id of the BMI3 sensor */
             rslt = bmi3_get_regs(BMI3_REG_CHIP_ID, chip_id, 2, dev);
-
+            
             if (rslt == BMI3_OK)
             {
                 dev->chip_id = chip_id[0];
@@ -1970,6 +1973,7 @@ int8_t bmi3_set_regs(uint8_t reg_addr, const uint8_t *data, uint16_t len, struct
         if (dev->intf == BMI3_SPI_INTF)
         {
             reg_addr = (reg_addr & BMI3_SPI_WR_MASK);
+            printf("reg_addr: %x",reg_addr);
         }
 
         dev->intf_rslt = dev->write(reg_addr, data, len, dev->intf_ptr);
@@ -2020,19 +2024,19 @@ int8_t bmi3_soft_reset(struct bmi3_dev *dev)
         /* Reset bmi3 device */
         rslt = bmi3_set_command_register(BMI3_CMD_SOFT_RESET, dev);
         dev->delay_us(BMI3_SOFT_RESET_DELAY, dev->intf_ptr);
-
+        
         /* Performing a dummy read after a soft-reset */
         if ((rslt == BMI3_OK) && (dev->intf == BMI3_SPI_INTF))
         {
             rslt = bmi3_get_regs(BMI3_REG_CHIP_ID, dummy_byte, 2, dev);
         }
-
+        
         /* Enabling Feature engine */
         if (rslt == BMI3_OK)
         {
             rslt = bmi3_set_regs(BMI3_REG_FEATURE_IO2, feature_data, 2, dev);
         }
-
+        
         if (rslt == BMI3_OK)
         {
             /* Enabling feature status bit */
@@ -2044,7 +2048,7 @@ int8_t bmi3_soft_reset(struct bmi3_dev *dev)
             /* Enable feature engine bit */
             rslt = bmi3_set_regs(BMI3_REG_FEATURE_CTRL, feature_engine_en, 2, dev);
         }
-
+        
         if (rslt == BMI3_OK)
         {
             /* Checking the status bit for feature engine enable */

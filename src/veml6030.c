@@ -48,14 +48,16 @@ int8_t veml_get_data(){
     float factor = (0.1152*veml_data.gain)/(veml_data.integration_time+1);
 
     if(read_bytes(0x04,&light_array[0],2,VEML_ADDRESS) && DEBUG){printf("error with reading veml\n");}
-    uint16_t light= light_array[0] | (light_array[1] << 8);
-    
-    veml_data.data_array[0]=light*factor;
+    uint16_t light= (light_array[0] | (light_array[1] << 8))*factor;
+    memcpy(&veml_data.data_array[0],&light,2);
 
     // readout white
     if(read_bytes(0x05,&light_array[0],2,VEML_ADDRESS) && DEBUG){printf("error with reading veml\n");}
-    light= light_array[0] | (light_array[1] << 8);
-    veml_data.data_array[1]=light*factor;
+    uint16_t light_white= (light_array[0] | (light_array[1] << 8))*factor;
+    memcpy(&veml_data.data_array[2],&light_white,2);
+    float timeval[1];
+    timeval[0] = (k_uptime_ticks()/32768.0)-global_timestamp;
+    memcpy(&veml_data.data_array[4],&timeval,4);
 }
 
 uint8_t sleep_veml(bool b){
@@ -67,14 +69,12 @@ uint8_t sleep_veml(bool b){
 }
 
 extern void send_data_veml(void){
-    uint32_t time = k_uptime_get_32();
     veml_get_data();
     if(!skipped_first){
         skipped_first = true;
         return;
     }
-    if(PRINT_SENSOR_DATA){printf("light: %i time: %i\n",veml_data.data_array[0], time);};
-    send_data(SENSOR_VEML_ID, &veml_data.data_array, 2*2);
+    send_data(SENSOR_VEML_ID, &veml_data.data_array, 8);
 }
 
 void update_config_veml(){

@@ -6,10 +6,12 @@
 		}
 	],
 	"settings": {
-		"nrf-connect.toolchain.path": "${nrf-connect.toolchain:2.2.0}",
+		"nrf-connect.toolchain.path": "${nrf-connect.toolchain:2.4.2}",
 		"files.associations": {
 			"stdio.h": "c",
-			"sensors.h": "c"
-		}
+			"sensors.h": "c",
+			"smp_bt.h": "c"
+		},
+		"nrf-connect.topdir": "${nrf-connect.sdk:2.4.2}"
 	}
 }
