@@ -34,8 +34,8 @@ Example: The configuration value 0x0104 will enable the SHTC3 sensor with a meas
 data | |    
 -------------------|-----
 uuid          | cddf1013-30f7-4671-8b43-5e40ba53514a
-byte 0-3          | distance (uInt16) 
-byte 4-7          | standart deviation of distance value (uInt16)
+byte 0-1          | distance (uInt16) 
+byte 2-3          | standart deviation of distance value (uInt16)
 byte 4-7          | timestamp (float32LittleEndian)
 
 Data is repeating every 8 byte.
