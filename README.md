@@ -146,6 +146,69 @@ integration time | |
 400ms | 0x02
 800ms | 0x03
 
+### Acceleration, Rotation rate [BMI323](https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmi323-ds000.pdf&ved=2ahUKEwjyvtuah6yTAxX0xAIHHXy3NK0QFnoECAUQAQ&usg=AOvVaw0z6qFUI3gDQFwwnyW6EIw1)<a name="BMI323"></a> ###
+gyroscope data | |    
+-------------------|-----
+uuid          | cddf1000-30f7-4671-8b43-5e40ba53514a
+byte 0-3          | timestamp (float32LittleEndian)
+byte 4-7          | gyr_x (float32LittleEndian)
+byte 8-11         | gyr_y (float32LittleEndian)
+byte 12-15         | gyr_z (float32LittleEndian)
+
+acceleration data | |    
+-------------------|-----
+uuid          | cddf1001-30f7-4671-8b43-5e40ba53514a
+byte 0-3          | timestamp (float32LittleEndian)
+byte 4-7          | acc_x (float32LittleEndian)
+byte 8-11         | acc_y (float32LittleEndian)
+byte 12-15         | acc_z (float32LittleEndian)
+
+config | |    
+-------------------|-----
+uuid        | cddf1002-30f7-4671-8b43-5e40ba53514a
+byte 0          | enable (bool)
+byte 1          | rate
+byte 2          | range acc
+byte 3          | range gyr
+byte 4          | format
+byte 5          | eventsize
+
+rate | |    
+-------------------|-----
+0x06          | 25Hz
+0x07          | 50Hz
+0x08          | 100Hz
+0x09          | 200Hz
+0x0A          | 400Hz
+
+range acceleration | |    
+-------------------|-----
+0x00          | 2g
+0x01          | 4g
+0x02          | 8g
+0x03          | 16g
+
+range gyroscope | |    
+-------------------|-----
+0x00          | 2g
+0x01          | 4g
+0x02          | 8g
+0x03          | 16g
+
+axis | |    
+-------------------|-----
+0x00          | x,y,z
+
+number of data per ble package | |    
+-------------------|-----
+0x01          | 1
+0x02          | 2
+...         | ...
+0x0A          | 10
+0x0B          | 11
+
+
+
 ## Flash new board with specific serial number
 
 ```console
